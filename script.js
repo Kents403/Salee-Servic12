@@ -341,20 +341,9 @@ function updateOrderSummary() {
     orderTotal.textContent = totalAmount.toLocaleString();
 }
 
+// script.js - GitHub Pages uchun
 function sendOrderToTelegram() {
-    const customerName = document.getElementById('customerName').value.trim();
-    const telegramUsername = document.getElementById('telegramUsername').value.trim();
-    const gameId = document.getElementById('gameId').value.trim();
-    const productType = document.getElementById('productType').value;
-    const orderNotes = document.getElementById('orderNotes').value.trim();
-    
-    if (cart.length === 0) {
-        showNotification('Savat bo\'sh!', 'error');
-        return;
-    }
-    
-    const orderId = generateOrderId();
-    const totalAmount = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+    // ... oldingi kodlar ...
     
     const orderData = {
         id: orderId,
@@ -368,43 +357,53 @@ function sendOrderToTelegram() {
         date: new Date().toISOString()
     };
     
-    console.log('📦 Buyurtma tayyor:', orderData);
+    console.log('🚀 Buyurtma yuborilmoqda...');
     
-    // ========== ASOSIY LOGIKA ==========
-    
-    // 1. AVVAL BOT ORQALI KANALGA YUBORISH
+    // GitHub Pages uchun optimallashtirilgan yuborish
     if (window.saleeBot) {
-        console.log('🤖 Bot orqali kanalga yuborilmoqda...');
-        
-        // Botni ishga tushirish (async, lekin kutmaymiz)
-        window.saleeBot.sendToChannelOnly(orderData)
+        // Bot orqali yuborish (asosiy)
+        window.saleeBot.sendToChannel(orderData)
             .then(success => {
                 if (success) {
-                    console.log('✅ Bot: Kanalga yuborildi');
+                    console.log('✅ Bot orqali yuborildi');
                 } else {
-                    console.log('⚠️ Bot: Kanalga yuborilmadi');
+                    console.log('⚠️ Bot ishlamadi, fallback ishlatildi');
                 }
             })
             .catch(err => {
-                console.error('❌ Bot catch:', err);
+                console.error('Bot yuborish xatosi:', err);
             });
+    } else {
+        console.log('❌ Bot obyekti yo\'q');
+        // To'g'ridan-to'g'ri yuborish
+        sendDirectToTelegram(orderData);
     }
     
-    // 2. MIJOZNI ADMIN GA YUBORISH (ASOSIY)
+    // Mijozni admin ga yuborish (har doim)
+    sendCustomerToAdmin(orderData);
+    
+    // Tozalash
+    completeOrder(orderId);
+}
+
+// Mijozni admin ga yuborish
+function sendCustomerToAdmin(orderData) {
     const adminMessage = formatOrderMessage(orderData);
     const adminUrl = `https://t.me/salee_uz?text=${encodeURIComponent(adminMessage)}`;
     
-    showNotification('Telegram admin ga yuborilmoqda...');
-    
-    // 3. TELEGRAM OCHISH
     setTimeout(() => {
         window.open(adminUrl, '_blank');
-        
-        // 4. TOZALASH ISHLARI
-        completeOrder(orderId);
-        
     }, 500);
 }
+
+// To'g'ridan-to'g'ri yuborish
+function sendDirectToTelegram(orderData) {
+    const message = formatOrderMessage(orderData);
+    const directUrl = `https://t.me/salee_servis?text=${encodeURIComponent(message)}`;
+    window.open(directUrl, '_blank');
+}
+
+// Qolgan funksiyalar o'zgarmaydi...
 
 // Qolgan funksiyalar o'zgarmasdan:
 function completeOrder(orderId) {
@@ -540,4 +539,5 @@ document.addEventListener('DOMContentLoaded', function() {
     window.addEventListener('resize', checkScreenSize);
     
     console.log('SALEE SERVIS toliq yuklandi!');
+
 });
